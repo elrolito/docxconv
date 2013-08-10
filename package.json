@@ -1,0 +1,32 @@
+{
+  "name": "docxconv",
+  "version": "0.0.1",
+  "description": "Utility script to convert MS Word doc(x) files to clean HTML/Markdown.",
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "directories": {
+    "lib": "./lib/docxconv"
+  },
+  "main": "./lib/docxconv/docxconv",
+  "bin": {
+    "docxconv": "./bin/docxconv"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elrolito/docxconv.git"
+  },
+  "keywords": [
+    "unoconv",
+    "pandoc",
+    "html",
+    "jquery",
+    "tidy",
+    "markdown"
+  ],
+  "author": "Rolando Henry <elrolito@me.com>",
+  "license": "MIT"
+}
