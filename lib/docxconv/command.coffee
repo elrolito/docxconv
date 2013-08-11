@@ -1,9 +1,20 @@
 async = require 'async'
 fs = require 'fs'
 
-argv = require('./options').argv
+argv = require('optimist')
+  .usage('Usage: $0 [-foc] <file>|<glob> ...')
+  .alias('f', 'format')
+  .default('f', 'html')
+  .describe('f', 'conversion format')
+  .alias('o', 'output')
+  .demand('o')
+  .describe('o', 'output destination')
+  .alias('w', 'workers')
+  .describe('w', 'queue worker concurrency')
+  .default('w', 4)
+  .argv
 
-DocxConvClass = require('./docxconv').DocxConv
+docxconv = require('./docxconv')
 
 run = () ->
   if argv._
@@ -14,10 +25,7 @@ run = () ->
         unless fs.existsSync(argv.output)
           fs.mkdirSync(argv.output)
 
-        docxconv = new DocxConvClass argv
-        worker = docxconv.queueWorker.bind(docxconv)
-
-        async.each results, worker, (err) ->
-          console.log "all conversions complete"
+        docxconv.convert results, argv.f, argv.o, null, argv.w, (err) ->
+          console.log "Done!"
 
 exports.run = run

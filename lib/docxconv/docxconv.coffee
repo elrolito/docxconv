@@ -3,34 +3,39 @@ fs = require 'fs'
 path = require 'path'
 
 converter = require './converter'
+docxconv = exports = module.exports = {}
 
-class DocxConv
-  constructor: (@args) ->
-    console.log "Docxconv init"
-    @queue = async.queue @queueTask, @args.c
-    @queue.drain = () ->
-      console.log "All tasks completed."
+docxconv.convert = (batch, format, output, opts, workers = 4, callback) ->
+  console.log "Converting: %s", batch
 
-  queueWorker: (task, callback) ->
-    @queue.push task, (err) ->
-      console.log "Adding %s to conversion queue", task
+  if format is 'html'
+    console.log "...to html."
+    worker = (file, callback) ->
+      console.log "[~] Converting %s", file
+      converter.html file, opts, (err, html) ->
+        return callback(err) if err
 
-  queueTask: (task, callback) =>
-    console.log "Executing task (%d at a time): %s", @args.c, task
-
-    file = task
-
-    if @args.f is 'html'
-      converter.html file, (err, html) =>
         ext = path.extname file
         basename = path.basename file, ext
-        output = path.join(@args.o + path.sep + basename + '.html')
+        result = path.join(output + path.sep + basename + '.html')
 
-        fs.writeFile output , html, (err) ->
-          console.log "Writing %s", output
-          callback(err)
-    else
-      console.log "No task for %s", @args.f
-      callback()
+        fs.writeFile result, html, (err) ->
+          return callback(err) if err
 
-exports.DocxConv = DocxConv
+          console.log "[>] Writing %s", result
+          callback()
+  else
+    console.log "[!] Don't yet know how to convert to %s.", format
+    return callback()
+
+  queue = async.queue worker, workers
+  queue.drain = () ->
+    console.log "[✓] All tasks completed."
+  queue.empty = () ->
+    console.log "[ ] Queue empty."
+
+  console.log "[+] Adding %s to queue.", batch
+  queue.push batch, (err) ->
+    console.log "[-] Finished task, %d left in queue.", queue.length()
+
+  console.log "[#] %d files in queue.", queue.length()
