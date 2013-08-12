@@ -6,6 +6,7 @@ listener = unoconv.listen({ port: 2002 })
 tidy = require('htmltidy').tidy
 cheerio = require 'cheerio'
 defaultOpts = require('./options')
+msg = require './msg'
 
 convert2html = (file, opts, callback) ->
   # Fallback to default opts
@@ -13,7 +14,7 @@ convert2html = (file, opts, callback) ->
 
   unoconv.convert file, 'html', (err, result) ->
     # Pre DOM cleanup
-    console.log "[$] Pre DOM cleanup."
+    console.log msg.info("[$] Pre DOM cleanup of %s"), file
 
     $ = cheerio.load(result)
     $('[lang^="en-"]').removeAttr('lang')
@@ -22,10 +23,10 @@ convert2html = (file, opts, callback) ->
     tidy $.html(), opts.tidy, (err, html) ->
       return callback(err) if err
 
-      console.log("[*] html conversion and tidy complete")
+      console.log msg.done("[*] conversion and tidy of %s complete"), file
 
       # Post DOM cleanup
-      console.log "[$] Post DOM cleanup."
+      console.log msg.info("[$] Post DOM cleanup of %s"), file
       html = html.replace(/&nbsp;/g, ' ')
       $ = cheerio.load(html)
       $('p:empty').remove()
