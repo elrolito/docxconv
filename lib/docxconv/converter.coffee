@@ -47,7 +47,7 @@ converter.html = (file, destination, opts, callback) ->
         msg.log "warn", "[>] Writing html %s", htmlFile
         fs.writeFileSync htmlFile, htmlContent
       catch error
-        msg.log "err", "[!] Error writing file: %s", error
+        msg.log "error", "[!] Error writing file: %s", error
         return callback(error)
       finally
         htmlResult = {
@@ -76,7 +76,7 @@ converter.markdown = (html, destination, opts, callback) ->
       msg.log "warn", "[>] Writing markdown %s", file
       fs.writeFileSync file, result
     catch error
-      msg.log "err", "[!] Error writing file: %s", error
+      msg.log "error", "[!] Error writing file: %s", error
       return callback(error)
     finally
       callback(null, result)
