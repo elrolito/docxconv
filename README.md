@@ -6,7 +6,7 @@ Utility script to convert MS Word doc(x) files to clean HTML, using DOM cleanup 
 Usage
 -----
 
-```bash
+```text
 docxconv [-fq] -o <path> [--watch] <file>|<path> ...
 
 Options:
