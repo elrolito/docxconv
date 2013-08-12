@@ -14,4 +14,7 @@ msg.log = (type, message, args...) ->
     when 'info' then color = msg.info
     when 'done' then color = msg.done
 
-  return console.log color(message), args
+  if args.length > 0
+    return console.log color(message), args
+  else
+    return console.log color(message)
