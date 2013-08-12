@@ -1,6 +1,6 @@
 {
   "name": "docxconv",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Rolando Henry <elrolito@me.com>",
   "description": "Utility script to convert MS Word doc(x) files to clean HTML/Markdown.",
   "keywords": [
