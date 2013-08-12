@@ -1,6 +1,4 @@
 async = require 'async'
-fs = require 'fs'
-path = require 'path'
 
 converter = require './converter'
 msg = require './msg'
@@ -22,25 +20,22 @@ class DocxConv
   taskWorker: (file, callback) =>
     console.log "[~] Converting %s to %s", file, @format
 
-    switch @format
-      when 'html'
-        converter.html file, @opts, (err, html) =>
-          return callback(err) if err
+    if @format is 'html' or @format is 'markdown'
+      converter.html file, @output, @opts, (err, result) =>
+        return callback(err) if err
 
-          ext = path.extname file
-          basename = path.basename file, ext
-          result = path.join(@output + path.sep + basename + '.html')
+        if @format is 'markdown'
+          msg.log "info", "[~] Converting html -> markdown %s", file
+          converter.markdown result, @output, @opts, (err, md) ->
+            return callback(err) if err
 
-          try
-            msg.log "warn", "[>] Writing %s", result
-            fs.writeFileSync result, html
-          catch error
-            msg.log "err", "[!] Error writing file: %s", error
-            return callback(error)
-          finally
-            return callback()
-      else
-        msg.log "warn", "[!] Don't know how to convert to %s.", @format
+            callback(null)
+        else
+          callback(null)
+
+    else
+      msg.log "warn", "[!] Don't know how to convert to %s.", @format
+      callback(null)
 
   convert: (batch, callback) =>
     msg.log "info", "[+] Adding %s to queue.", batch

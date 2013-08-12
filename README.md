@@ -7,13 +7,14 @@ Usage
 -----
 
 ```text
-docxconv [-fq] -o <path> [--watch] <file>|<path> ...
+docxconv [-fq] -o <path> <file> ... [--watch] [--watch-path=<path>]
 
 Options:
-  -f, --format   conversion format                   [default: "html"]
-  -o, --output   output destination <path>           [required]
-  -q, --workers  queue worker concurrency <int>      [default: 4]
+  -f, --format   conversion format <html|markdown>  [default: "html"]
+  -o, --output   output destination <path>          [required]
+  -q, --workers  queue worker concurrency <int>     [default: 4]
   --watch        watch for new documents
+  --watch-path   <path> to watch
 ```
 
 Requirements

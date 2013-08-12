@@ -1,5 +1,7 @@
+opts = exports = module.exports = {}
+
 # Default options for Tidy
-tidyOpts = {
+opts.tidy = {
   altText: '',
   bare: false, # Keep smart quotes, etc.
   breakAfterBr: false,
@@ -22,4 +24,11 @@ tidyOpts = {
   wrap: 80,
 }
 
-exports.tidy = tidyOpts
+opts.pandoc = [
+  '-p',
+  '-R',
+  '-S',
+  '--columns=80',
+  '--normalize',
+  '--old-dashes'
+]
