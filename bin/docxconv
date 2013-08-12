@@ -1,0 +1,10 @@
+#!/usr/bin/env coffee
+
+fs = require 'fs'
+path = require 'path'
+
+lib  = path.join(path.dirname(fs.realpathSync(__filename)), '../lib')
+
+argv = require(lib + '/docxconv/options').argv
+
+require(lib + '/docxconv/command').run()
