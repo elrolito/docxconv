@@ -1,27 +1,30 @@
 async = require 'async'
 fs = require 'fs'
 path = require 'path'
+watch = require 'watch'
 
 argv = require('optimist')
-  .usage('Usage: docxconv [-fq] -o <path> <file>|<path> [--watch]')
+  .usage('''
+    Usage: docxconv [-fq] -o <path> <file> ... [--watch] [--watch-path=<path>]
+   ''')
   .alias('f', 'format')
   .default('f', 'html')
-  .describe('f', 'conversion format')
+  .describe('f', 'conversion format <html|markdown>')
   .alias('o', 'output')
   .demand('o')
   .describe('o', 'output destination <path>')
   .alias('q', 'workers')
   .describe('q', 'queue worker concurrency <int>')
   .default('q', 4)
+  .boolean('watch')
   .describe('watch', 'watch for new documents')
+  .describe('watch-path', '<path> to watch')
   .argv
 
 msg = require './msg'
 
 DocxConv = require('./docxconv').DocxConv
 docxconv = new DocxConv(argv)
-
-watch = require 'watch'
 
 run = () ->
   if argv._
@@ -34,25 +37,36 @@ run = () ->
 
         docxconv.convert results, (err) ->
           if err
-            msg.log "err", "[!] There was an error during the conversion."
+            msg.log "error", "[!] There was an error during the conversion."
+  else
+    msg.log "warn", "[!] Nothing to convert."
 
   if argv.watch
-    msg.log "warn", "[?] Watching %s for new files", argv.watch
-    watch.createMonitor argv.watch, (monitor) ->
-      monitor.on 'created', (file, stat) ->
-        msg.log "info", "[+] %s was added to watched directory.", file
 
-        # Only watch for documents.
-        if path.extname(file).match(/docx?/)
-          docxconv.convert file, (err) ->
-            msg.log "done", "[@] Finished converting added file %s", file
-        else
-          msg.log "err", "[!] Cannot convert %s to html", file
+    if !argv['watch-path']
+      watchDir = path.dirname(argv._[0])
+    else
+      watchDir = argv['watch-path']
 
-        msg.log "info", "[?] Still watching %s", argv.watch
-      monitor.on 'changed', (file, curr, prev) ->
-        # Handle changed
-      monitor.on 'removed', (file, stat) ->
-        # Handle removed
+    if fs.existsSync watchDir
+      msg.log "warn", "[?] Watching %s for new files", watchDir
+      watch.createMonitor watchDir, (monitor) ->
+        monitor.on 'created', (file, stat) ->
+          msg.log "info", "[+] %s was added to watched directory.", file
+
+          # Only watch for documents.
+          if path.extname(file).match(/docx?/)
+            docxconv.convert file, (err) ->
+              msg.log "done", "[@] Finished converting added file %s", file
+          else
+            msg.log "error", "[!] Cannot convert %s to html", file
+
+          msg.log "info", "[?] Still watching %s", watchDir
+        monitor.on 'changed', (file, curr, prev) ->
+          # Handle changed
+        monitor.on 'removed', (file, stat) ->
+          # Handle removed
+    else
+      msg.log "error", "[!] Cannot watch %s (does not exist)", watchDir
 
 exports.run = run
