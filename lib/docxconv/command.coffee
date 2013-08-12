@@ -3,17 +3,17 @@ fs = require 'fs'
 path = require 'path'
 
 argv = require('optimist')
-  .usage('Usage: $0 [-foc] <file>|<glob> ...')
+  .usage('Usage: docxconv [-fq] -o <path> <file>|<path> [--watch]')
   .alias('f', 'format')
   .default('f', 'html')
   .describe('f', 'conversion format')
   .alias('o', 'output')
   .demand('o')
-  .describe('o', 'output destination')
+  .describe('o', 'output destination <path>')
   .alias('q', 'workers')
-  .describe('q', 'queue worker concurrency')
+  .describe('q', 'queue worker concurrency <int>')
   .default('q', 4)
-  .describe('watch', 'directory to watch for added files')
+  .describe('watch', 'watch for new documents')
   .argv
 
 msg = require './msg'
