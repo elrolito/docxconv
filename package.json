@@ -1,6 +1,6 @@
 {
   "name": "docxconv",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "Rolando Henry <elrolito@me.com>",
   "description": "Utility script to convert MS Word doc(x) files to clean HTML/Markdown.",
   "keywords": [
@@ -39,6 +39,7 @@
     "unoconv": "~0.1.2",
     "cli-color": "~0.2.2",
     "pdc": "~0.1.1",
-    "watch": "git+https://github.com/mikeal/watch.git"
+    "watch": "git+https://github.com/mikeal/watch.git",
+    "cheerio": "~0.12.1"
   }
 }
