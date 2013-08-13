@@ -8,11 +8,14 @@ Usage
 
 ```text
 docxconv [-fq] -o <path> <file> ... [--watch] [--watch-path=<path>]
+         [--tidy] [--cleanup.tidy] [--cleanup.pandoc] [--stdout]
 
 Options:
-  -f, --format   conversion format <html|markdown>  [default: "html"]
-  -o, --output   output destination <path>          [required]
-  -q, --workers  queue worker concurrency <int>     [default: 4]
+  -f, --format   conversion format <html|markdown>       [default: "html"]
+  -o, --output   output destination <path>               [required]
+  -q, --workers  queue worker concurrency <int>          [default: 4]
+  --cleanup      Booleans: cleanup.tidy, cleanup.pandoc
+  --stdout       Do not write file, use stdout instead
   --watch        watch for new documents
   --watch-path   <path> to watch
 ```

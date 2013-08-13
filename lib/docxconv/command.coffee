@@ -6,6 +6,7 @@ watch = require 'watch'
 argv = require('optimist')
   .usage('''
     Usage: docxconv [-fq] -o <path> <file> ... [--watch] [--watch-path=<path>]
+                    [--tidy] [--cleanup.tidy] [--cleanup.pandoc] [--stdout]
    ''')
   .alias('f', 'format')
   .default('f', 'html')
@@ -19,6 +20,7 @@ argv = require('optimist')
   .boolean('tidy')
   .describe('cleanup', 'Booleans: cleanup.tidy, cleanup.pandoc')
   .boolean('stdout')
+  .describe('stdout', 'Do not write file, use stdout instead')
   .boolean('watch')
   .describe('watch', 'watch for new documents')
   .describe('watch-path', '<path> to watch')
