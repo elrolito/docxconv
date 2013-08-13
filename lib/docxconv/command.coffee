@@ -16,10 +16,16 @@ argv = require('optimist')
   .alias('q', 'workers')
   .describe('q', 'queue worker concurrency <int>')
   .default('q', 4)
+  .boolean('tidy')
+  .describe('cleanup', 'Booleans: cleanup.tidy, cleanup.pandoc')
+  .boolean('stdout')
   .boolean('watch')
   .describe('watch', 'watch for new documents')
   .describe('watch-path', '<path> to watch')
   .argv
+
+if argv.watch and argv._
+  argv['watch-path'] ?= path.dirname(argv._[0])
 
 msg = require './msg'
 
@@ -36,37 +42,28 @@ run = () ->
           fs.mkdirSync(argv.output)
 
         docxconv.convert results, (err) ->
-          if err
-            msg.log "error", "[!] There was an error during the conversion."
+          msg.log "error", err if err
+
   else
     msg.log "warn", "[!] Nothing to convert."
 
   if argv.watch
-
-    if !argv['watch-path']
-      watchDir = path.dirname(argv._[0])
-    else
-      watchDir = argv['watch-path']
-
-    if fs.existsSync watchDir
-      msg.log "warn", "[?] Watching %s for new files", watchDir
-      watch.createMonitor watchDir, (monitor) ->
+    if fs.existsSync argv['watch-path']
+      msg.log "warn", "[?] Watching %s for new files", argv['watch-path']
+      watch.createMonitor argv['watch-path'], (monitor) ->
         monitor.on 'created', (file, stat) ->
-          msg.log "info", "[+] %s was added to watched directory.", file
 
           # Only watch for documents.
-          if path.extname(file).match(/docx?/)
+          if path.extname(file).match(/docx?/i)
+            msg.log "info", "[+] #{file} was added to watched directory."
             docxconv.convert file, (err) ->
-              msg.log "done", "[@] Finished converting added file %s", file
-          else
-            msg.log "error", "[!] Cannot convert %s to html", file
+              msg.log "error", "[!] Cannot convert #{file} to html" if err
 
-          msg.log "info", "[?] Still watching %s", watchDir
         monitor.on 'changed', (file, curr, prev) ->
           # Handle changed
         monitor.on 'removed', (file, stat) ->
           # Handle removed
     else
-      msg.log "error", "[!] Cannot watch %s (does not exist)", watchDir
+      msg.log "error", "[!] Cannot watch #{argv['watch-path']} (does not exist)"
 
 exports.run = run

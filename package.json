@@ -1,6 +1,6 @@
 {
   "name": "docxconv",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "author": "Rolando Henry <elrolito@me.com>",
   "description": "Utility script to convert MS Word doc(x) files to clean HTML/Markdown.",
   "keywords": [
@@ -31,9 +31,6 @@
       "url": "http://vorb.de/license/mit.html"
     }
   ],
-  "bundleDependecies": {
-    "watch": "git+https://github.com/mikeal/watch.git"
-  },
   "dependencies": {
     "coffee-script": "~1.6.3",
     "async": "~0.2.9",
@@ -42,7 +39,7 @@
     "unoconv": "~0.1.2",
     "cli-color": "~0.2.2",
     "pdc": "~0.1.1",
-    "watch": "~0.8.0",
-    "cheerio": "~0.12.1"
+    "cheerio": "~0.12.1",
+    "watch": "git+https://github.com/mikeal/watch.git"
   }
 }

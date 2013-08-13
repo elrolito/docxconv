@@ -15,6 +15,7 @@ opts.tidy = {
   forceOutput: true,
   hideComments: false,
   indent: true,
+  inputEncoding: 'utf8',
   outputEncoding: 'utf8',
   outputHtml: true,
   showBodyOnly: true
