@@ -1,57 +1,165 @@
 async = require 'async'
+fs = require 'fs'
+path = require 'path'
 
 converter = require './converter'
 msg = require './msg'
 
 class DocxConv
   constructor: (args, @opts) ->
-    { @format, @output, @workers } = args
+    { @format, @output, @workers, @tidy, @cleanup, @stdout, @watch } = args
+
+    @errors = []
 
     # Create queue instance
-    msg.log "done", "Creating queue with %d workers.", @workers
+    console.log "Creating queue with #{@workers} workers."
     @queue = async.queue @taskWorker, @workers
-    @queue.drain = () ->
+
+    @queue.drain = () =>
       msg.log "done", "[✓] All tasks completed."
+
+      errorCount = @errors.length
+
+      if errorCount > 0
+        msg.log "error", "[!] #{errorCount} files not converted:"
+        msg.log "error", "#{error.error}: #{error.file}" for error in @errors
+        msg.log "warn", "[@] Trying again..."
+        for error in @errors
+          do (error) =>
+            @convert error.file, (err)->
+              if err
+                msg.log "error", "[!] Still can’t convert #{error.file}"
+
+      if @watch
+        console.log "Still watching #{args['watch-dir']} for new files..."
+
     @queue.saturated = () ->
-      msg.log "warn", "[#] Queue saturated, tasks pending."
+      msg.log "warn", "[#] Queue saturated, #{@length()} tasks pending."
+
     @queue.empty = () ->
       msg.log "warn", "[ ] Queue empty."
 
   taskWorker: (file, callback) =>
-    console.log "[~] Converting %s to %s", file, @format
+    unless @format.match(/html|markdown/i)
+      msg.log "warn", "[!] Don't know how to convert to #{@format}."
+      return callback("Unknown format")
 
-    if @format is 'html' or @format is 'markdown'
-      converter.html file, @output, @opts, (err, result) =>
-        return callback(err) if err
+    ext = path.extname file
+    basename = path.basename file, ext
 
-        if @format is 'markdown'
-          msg.log "info", "[~] Converting html -> markdown %s", file
-          converter.markdown result, @output, @opts, (err, md) ->
-            return callback(err) if err
+    msg.log "info", "[-] Converting #{file} to #{ @format}, removed from queue."
 
-            callback(null)
-        else
-          callback(null)
+    async.waterfall [
+      # 1. Unoconv
+      (callback) ->
+        msg.log "info", "[1] doc(x)->html via unoconv: #{basename}"
 
-    else
-      msg.log "warn", "[!] Don't know how to convert to %s.", @format
-      callback(null)
+        converter.unoconv file, (err, result) ->
+          return callback(err) if err
+
+          msg.log "done", "[1] HTML conversion done: #{basename}"
+          callback(null, result)
+
+      # 2. Tidy
+      (html, callback) =>
+        # Skip unless --tidy arg given
+        unless @tidy
+          msg.log "warn", "[2] Skipping Tidy: #{basename}"
+          return callback(null, html)
+
+        msg.log "info", "[2] Tidy HTML cleanup: #{basename}"
+
+        converter.tidy html, @opts, (err, result) ->
+          return callback(err) if err
+
+          msg.log "done", "[2] Tidy done: #{basename}"
+          callback(null, result)
+
+      # 3. Post-Tidy DOM Cleanup
+      (html, callback) =>
+        # Skip unless --cleanup.tidy
+        unless @cleanup and @cleanup.tidy
+          msg.log "warn", "[3] Skipping post-Tidy cleanup: #{basename}"
+          return callback(null, html)
+
+        msg.log "info", "[3] Post-Tidy cleanup: #{basename}"
+
+        converter.postcleanup html, (err, result) ->
+          return callback(err) if err
+
+          msg.log "done", "[3] Post-Tidy cleanup done: #{basename}"
+          callback(null, result)
+
+      # 4. Pandoc
+      (html, callback) =>
+        # Skip unless --format is markdown
+        unless @format.match(/markdown/i)
+          msg.log "warn", "[4] No further conversions: #{basename}"
+          return callback(null, html)
+
+        msg.log "done", "[4] html -> #{@format} via pandoc: #{basename}"
+        converter.pandoc html, @format, @opts, (err, result) ->
+          return callback(err) if err
+
+          msg.log "done", "[4] Pandoc conversion done: #{basename}"
+          callback(null, result)
+
+      # 5. Final cleanup
+      (html, callback) =>
+        unless @cleanup and @cleanup.pandoc
+          msg.log "warn", "[5] Skipping final cleanup: #{basename}"
+          return callback(null, html)
+
+        converter.finalize html, (err, result) ->
+          return callback(err) if err
+
+          msg.log "info", "[5] Final cleanup done: #{basename}"
+          callback(null, result)
+
+      # 6. Write file
+      (html, callback) =>
+        # Skip writing file if --stdout
+        return callback(null, html) if @stdout
+
+        destination = @output + path.sep + basename + '.' + @format
+
+        msg.log "warn", "[>] Writing file: #{destination}"
+        fs.writeFile destination, html, (err) ->
+          if err
+            msg.log "error", "[!] Error writing file #{destination}: #{error}"
+            return callback(err)
+
+          console.log html if @stdout
+          callback(null, destination)
+
+    ], (err, result) =>
+      if err
+        msg.log "error", "[!] There was an error converting #{file}"
+        @errors.push({ error: err, file: file })
+
+        return callback(err)
+
+      msg.log "done", "[*] Finished tasks: #{file} -> #{result}"
+      callback(null, result)
 
   convert: (batch, callback) =>
-    msg.log "info", "[+] Adding %s to queue.", batch
+    @errors = []
 
-    # Add batch to queue to process
+    if Array.isArray(batch)
+      batchSize = batch.length
+    else
+      batchSize = 1
+
+    msg.log "info", "[+] Adding #{batchSize} tasks to queue."
     @queue.push batch, (err) =>
       return callback(err) if err
 
-      msg.log "done", "[*] Finished task."
-
       taskCount = @queue.length()
       if taskCount > 0
-        msg.log "info", "[#] %d left in queue.", @queue.length()
+        msg.log "info", "[#] #{@queue.length()} left in queue."
 
       callback(null, batch)
 
-    msg.log "warn", "[#] %d files in queue.", @queue.length()
+    msg.log "warn", "[#] #{@queue.length()} files in queue."
 
 exports.DocxConv = DocxConv
