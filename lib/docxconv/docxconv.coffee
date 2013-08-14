@@ -78,7 +78,7 @@ class DocxConv
       # 3. Post-Tidy DOM Cleanup
       (html, callback) =>
         # Skip unless --cleanup.tidy
-        unless @cleanup and @cleanup.tidy
+        unless @cleanup or @cleanup.tidy
           msg.log "warn", "[3] Skipping post-Tidy cleanup: #{basename}"
           return callback(null, html)
 
@@ -106,7 +106,7 @@ class DocxConv
 
       # 5. Final cleanup
       (html, callback) =>
-        unless @cleanup and @cleanup.pandoc
+        unless @cleanup or @cleanup.pandoc
           msg.log "warn", "[5] Skipping final cleanup: #{basename}"
           return callback(null, html)
 
