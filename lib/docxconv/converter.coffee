@@ -39,8 +39,9 @@ converter.postcleanup = (html, callback) ->
 
   try
     html = html.toString().replace(/&nbsp;/g, ' ')
-      .replace(/\b(\w+?)<span>(\w+?)<\/span>(\w+?)\b/ig, "$1$2$3")
+      .replace(/\b(\w+)<span(?:.+?)>([^<>].+?)<\/span>([^\b].+?)?/gmi, "$1$2$3")
       .replace(/\s*?<p([^>].+?)>\s*(?:\s*?<br>\s*?){1,}<\/p>\n?/mg, "")
+      .replace(/<span>([\u2000-\u200F}])<\/span>/gm, "$1")
 
     $ = cheerio.load(html)
     $('*:empty').remove()
@@ -70,7 +71,9 @@ converter.finalize = (html, callback) ->
   return callback("[!] Final cleanup: no HTML to cleanup.") if isEmpty(html)
 
   try
-    html = html.replace(/​/g, '').replace(/\\\s*\n/g, '')
+    html = html.toString().replace(/\\\s*\n/g, '')
+      .replace(/​|\x{E2808B}| /g, '')
+
     $ = cheerio.load(html)
     $('*:empty').remove()
     result = $.html()
