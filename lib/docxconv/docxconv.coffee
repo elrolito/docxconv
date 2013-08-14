@@ -24,11 +24,11 @@ class DocxConv
         msg.log "error", "[!] #{errorCount} files not converted:"
         msg.log "error", "#{error.error}: #{error.file}" for error in @errors
         msg.log "warn", "[@] Trying again..."
-        for error in @errors
-          do (error) =>
-            @convert error.file, (err)->
-              if err
-                msg.log "error", "[!] Still can’t convert #{error.file}"
+        while @errors.length > 0
+          error = @errors.shift()
+          @convert error.file, (err)->
+            if err
+              msg.log "error", "[!] Still can’t convert #{error.file}"
 
       if @watch
         console.log "Still watching #{args['watch-dir']} for new files..."
@@ -143,8 +143,6 @@ class DocxConv
       callback(null, result)
 
   convert: (batch, callback) =>
-    @errors = []
-
     if Array.isArray(batch)
       batchSize = batch.length
     else
