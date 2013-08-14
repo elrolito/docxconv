@@ -39,8 +39,9 @@ converter.postcleanup = (html, callback) ->
 
   try
     html = html.toString().replace(/&nbsp;/g, ' ')
-      .replace(/\b(\w+?)<span>(\w+?)<\/span>(\w+?)\b/ig, "$1$2$3")
+      .replace(/\b(\w+)<span(?:.+?)>([^<>].+?)<\/span>([^\b].+?)?/gmi, "$1$2$3")
       .replace(/\s*?<p([^>].+?)>\s*(?:\s*?<br>\s*?){1,}<\/p>\n?/mg, "")
+      .replace(/<span>([\u2000-\u200F}])<\/span>/gm, "$1")
 
     $ = cheerio.load(html)
     $('*:empty').remove()
